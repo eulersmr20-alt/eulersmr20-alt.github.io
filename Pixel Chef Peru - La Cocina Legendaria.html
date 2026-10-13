@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Chef Perú: La Cocina Legendaria</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Pixel & Modern -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #181116;
+            color: #f3e9dc;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 50% 20%, rgba(217, 119, 6, 0.15) 0%, transparent 60%),
+                radial-gradient(circle at 80% 80%, rgba(185, 28, 28, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 10% 70%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+                linear-gradient(180deg, #1f1412 0%, #0d0807 100%);
+        }
+        .pixel-font {
+            font-family: 'Press Start 2P', monospace;
+        }
+        canvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(217, 119, 6, 0.15);
+            border: 4px solid #b45309;
+            border-radius: 16px;
+            background-color: #261c16;
+        }
+        .pixel-btn {
+            font-family: 'Press Start 2P', monospace;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #271202;
+            border: 2px solid #fef3c7;
+            box-shadow: 0 4px 0 #78350f, 0 6px 12px rgba(0,0,0,0.4);
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+        }
+        .pixel-btn:hover {
+            filter: brightness(1.15);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #78350f, 0 10px 15px rgba(0,0,0,0.5);
+        }
+        .pixel-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #78350f, 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .pixel-btn-secondary {
+            background: linear-gradient(135deg, #059669, #047857);
+            color: #ecfdf5;
+            border-color: #a7f3d0;
+            box-shadow: 0 4px 0 #064e3b;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+        }
+        .pixel-btn-secondary:hover {
+            box-shadow: 0 6px 0 #064e3b;
+        }
+        .glass-panel {
+            background: rgba(30, 20, 16, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #181116;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d97706;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #f59e0b;
+        }
+    </style>
+</head>
+<body class="p-2 md:p-4">
+
+    <!-- Header bar -->
+    <header class="w-full max-w-4xl flex justify-between items-center mb-3 px-2">
+        <div class="flex items-center space-x-3 glass-panel px-4 py-2.5 rounded-2xl border-amber-600/40">
+            <span class="text-xl text-amber-400 animate-pulse"><i class="fa-solid fa-pepper-hot"></i></span>
+            <div>
+                <h1 class="pixel-font text-xs md:text-sm text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-amber-100 to-red-400 font-extrabold tracking-wider">Pixel Chef Perú</h1>
+                <p class="text-[10px] text-amber-400/80 font-semibold tracking-wide">Sazones & Tradición Andina</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2 text-xs">
+            <button id="recipeBookBtn" class="pixel-btn px-3.5 py-2.5 text-[10px] rounded-xl flex items-center gap-2">
+                <i class="fa-solid fa-book-open text-amber-950"></i> Recetas (<span id="unlockedCount" class="text-amber-950 font-bold">0</span>/8)
+            </button>
+            <button id="soundToggleBtn" class="pixel-btn px-3.5 py-2.5 text-[10px] rounded-xl bg-gradient-to-r from-stone-700 to-stone-800 text-stone-200 border-stone-500 border shadow-md">
+                <i id="soundIcon" class="fa-solid fa-volume-xmark text-stone-300"></i> Audio: OFF
+            </button>
+        </div>
+    </header>
+
+    <!-- Permanent On-Screen Instructions & Menu Bar -->
+    <div class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-3 mb-3 px-1 text-xs">
+        <div class="glass-panel p-3 rounded-2xl border-amber-500/20 text-stone-200">
+            <div class="text-amber-400 font-bold mb-1.5 flex items-center gap-2 text-xs uppercase tracking-wider"><i class="fa-solid fa-compass text-amber-500"></i> Instrucciones de Juego</div>
+            <p class="leading-relaxed text-[11px] text-stone-300">
+                1. Camina con <b class="text-amber-300 font-bold">Flechas / WASD</b>.<br>
+                2. Acércate e interactúa con <b class="text-amber-300 font-bold">ESPACIO</b> o botón <b class="text-amber-300 font-bold">Acción</b>.<br>
+                3. Junta insumos en estantes e inicia recetas en la <b class="text-amber-300 font-bold">Mesa Central</b>.
+            </p>
+        </div>
+        <div class="glass-panel p-3 rounded-2xl border-amber-500/20 text-stone-200">
+            <div class="text-amber-400 font-bold mb-1.5 flex items-center gap-2 text-xs uppercase tracking-wider"><i class="fa-solid fa-utensils text-amber-500"></i> Menú de Gastronomía</div>
+            <div id="quickMenuList" class="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] text-stone-300">
+                <!-- Dynamically filled -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Game Area -->
+    <main class="relative flex flex-col items-center justify-center w-full max-w-4xl">
+        <div class="relative w-full flex justify-center items-center">
+            <canvas id="gameCanvas" width="640" height="480" class="max-w-full h-auto"></canvas>
+
+            <!-- Opening Intro Modal -->
+            <div id="introModal" class="absolute inset-0 bg-stone-950/95 z-50 p-6 rounded-2xl border-4 border-amber-600 flex flex-col justify-between shadow-2xl backdrop-blur-lg">
+                <div class="text-center border-b border-amber-800/50 pb-3">
+                    <h2 class="pixel-font text-sm md:text-base text-amber-300 font-bold tracking-widest uppercase flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-fire-burner text-red-500"></i> La Cocina Mágica Peruana
+                    </h2>
+                    <p class="text-xs text-amber-200/80 mt-1.5 font-medium">¡Explora colores vivos, insumos autóctonos y platillos icónicos!</p>
+                </div>
+                <div class="my-3 text-xs md:text-sm leading-relaxed space-y-3 text-stone-200 overflow-y-auto max-h-[260px] pr-2">
+                    <div class="bg-gradient-to-r from-amber-950/60 to-stone-900/80 p-3.5 rounded-xl border border-amber-600/30">
+                        <span class="text-amber-300 font-bold flex items-center gap-2"><i class="fa-solid fa-palette text-amber-400"></i> PALETA VIBRANTE & DETALLES:</span>
+                        <p class="text-xs text-stone-300 mt-1">Suelos de terracota, azulejos peruanos, fogones encendidos y estaciones con efectos visuales dinámicos.</p>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-emerald-950/60 to-stone-900/80 p-3.5 rounded-xl border border-emerald-600/30">
+                        <span class="text-emerald-300 font-bold flex items-center gap-2"><i class="fa-solid fa-pepper-hot text-emerald-400"></i> 8 RECETAS TRADICIONALES:</span>
+                        <p class="text-xs text-stone-300 mt-1">Ceviche, Lomo Saltado, Papa a la Huancaína, Anticuchos, Causa, Rocoto Relleno y más.</p>
+                    </div>
+                </div>
+                <div class="text-center pt-2 border-t border-stone-800">
+                    <button id="startGameBtn" class="pixel-btn px-8 py-4 text-xs md:text-sm rounded-xl font-bold">
+                        ¡ENTRAR A LA COCINA!
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dialogue Box -->
+            <div id="dialogueBox" class="hidden absolute top-4 left-6 right-6 glass-panel border-2 border-amber-500/60 p-4 rounded-2xl text-xs md:text-sm text-stone-100 leading-relaxed shadow-2xl z-20 pointer-events-auto">
+                <div id="dialogueTitle" class="pixel-font text-amber-400 font-bold mb-2 tracking-wider text-xs md:text-sm flex items-center gap-2">=== Info ===</div>
+                <div id="dialogueText" class="text-stone-200 text-xs md:text-sm font-medium">Cargando...</div>
+                <div class="text-right mt-3 text-amber-400/90 text-[11px] font-semibold">Presiona [Espacio / Tocar] para continuar...</div>
+            </div>
+
+            <!-- Dish Selector Modal -->
+            <div id="dishSelectModal" class="hidden absolute inset-0 bg-stone-950/95 z-40 p-5 rounded-2xl border-4 border-amber-600 flex flex-col shadow-2xl backdrop-blur-md">
+                <div class="flex justify-between items-center pb-2 border-b border-amber-800/50">
+                    <h2 class="pixel-font text-xs md:text-sm text-amber-300 font-bold flex items-center gap-2"><i class="fa-solid fa-utensils text-amber-500"></i> Selecciona un Platillo</h2>
+                    <button id="closeDishSelectBtn" class="pixel-btn px-3 py-1 text-xs bg-stone-700 rounded-lg">X</button>
+                </div>
+                <p class="text-xs text-stone-300 my-2">Elige la receta tradicional peruana que deseas preparar:</p>
+                <div id="dishGrid" class="flex-1 overflow-y-auto my-1 grid grid-cols-1 md:grid-cols-2 gap-3 pr-1"></div>
+            </div>
+
+            <!-- Cooking Station Minigame Modal -->
+            <div id="cookingModal" class="hidden absolute inset-0 bg-stone-950/95 z-30 flex flex-col justify-between p-5 rounded-2xl border-4 border-amber-600 backdrop-blur-md shadow-2xl">
+                <div class="flex justify-between items-center border-b border-amber-800/50 pb-2">
+                    <h2 id="miniGameTitle" class="pixel-font text-xs md:text-sm text-amber-300 font-bold">Preparando Platillo</h2>
+                    <span id="stepCounter" class="pixel-font text-[10px] text-amber-950 bg-amber-400 px-3 py-1 rounded-lg font-bold shadow">Paso 1/4</span>
+                </div>
+
+                <div id="miniGameStage" class="flex-1 flex flex-col justify-center items-center relative my-3 overflow-hidden bg-stone-900/90 rounded-2xl border border-stone-700 p-3 shadow-inner">
+                </div>
+
+                <div class="flex justify-between items-center border-t border-amber-800/50 pt-2">
+                    <span id="miniGameInstruction" class="text-xs text-amber-200 font-bold">Sigue la instrucción de preparación</span>
+                    <button id="cancelCookBtn" class="pixel-btn px-4 py-2 text-xs rounded-xl">Salir</button>
+                </div>
+            </div>
+
+            <!-- Recipe Book Modal -->
+            <div id="recipeBookModal" class="hidden absolute inset-0 bg-stone-950/95 z-40 p-5 rounded-2xl border-4 border-amber-600 flex flex-col shadow-2xl">
+                <div class="flex justify-between items-center pb-2 border-b border-amber-800/50">
+                    <h2 class="pixel-font text-xs md:text-sm text-amber-300"><i class="fa-solid fa-book-bookmark text-amber-500"></i> Recetario Tradicional</h2>
+                    <button id="closeRecipeBookBtn" class="pixel-btn px-3 py-1 text-xs bg-stone-700 rounded-lg">X</button>
+                </div>
+                <div id="recipeList" class="flex-1 overflow-y-auto my-3 space-y-3 pr-1 text-xs md:text-sm"></div>
+            </div>
+        </div>
+
+        <!-- Mobile Controls D-Pad -->
+        <div class="md:hidden w-full max-w-sm mt-3 flex justify-between items-center px-4">
+            <div class="grid grid-cols-3 gap-1.5 w-32 h-32">
+                <div></div>
+                <button id="btnUp" class="pixel-btn flex items-center justify-center text-lg rounded-xl">▲</button>
+                <div></div>
+                <button id="btnLeft" class="pixel-btn flex items-center justify-center text-lg rounded-xl">◀</button>
+                <div class="bg-stone-900 rounded-xl border border-amber-600/40 flex items-center justify-center text-amber-400 text-[10px]">🕹️</div>
+                <button id="btnRight" class="pixel-btn flex items-center justify-center text-lg rounded-xl">▶</button>
+                <div></div>
+                <button id="btnDown" class="pixel-btn flex items-center justify-center text-lg rounded-xl">▼</button>
+                <div></div>
+            </div>
+            <div class="flex flex-col gap-2">
+                <button id="btnAction" class="pixel-btn w-20 h-20 bg-gradient-to-b from-amber-500 to-amber-700 rounded-2xl flex flex-col items-center justify-center text-xs text-amber-950 border-2 border-amber-200 shadow-xl">
+                    <i class="fa-solid fa-hand-pointer text-lg mb-1 text-amber-950"></i>
+                    <span class="pixel-font text-[9px]">ACCIÓN</span>
+                </button>
+            </div>
+        </div>
+
+        <footer class="mt-3 text-center text-xs text-stone-400/80 font-medium">
+            <span>Explora la cocina, recolecta ingredientes autóctonos y prepara exquisitos platos peruanos.</span>
+        </footer>
+    </main>
+
+    <script>
+        class SoundSystem {
+            constructor() {
+                this.ctx = null;
+                this.muted = true;
+                this.bgmTimer = null;
+                this.noteIndex = 0;
+                // Traditional Peruvian Pentatonic Melody Pattern
+                this.melody = [
+                    261.63, 293.66, 329.63, 392.00, 440.00, 523.25,
+                    440.00, 392.00, 329.63, 293.66, 329.63, 392.00,
+                    440.00, 392.00, 329.63, 261.63
+                ];
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioCtx();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playBeep(freq = 440, type = 'sine', duration = 0.1, vol = 0.1) {
+                if (this.muted) return;
+                this.init();
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch(e) {}
+            }
+
+            playSuccess() {
+                if (this.muted) return;
+                this.playBeep(523.25, 'sine', 0.12, 0.12);
+                setTimeout(() => this.playBeep(659.25, 'sine', 0.12, 0.12), 120);
+                setTimeout(() => this.playBeep(783.99, 'sine', 0.25, 0.12), 240);
+            }
+
+            playChop() {
+                this.playBeep(180, 'triangle', 0.05, 0.15);
+            }
+
+            playSizzle() {
+                this.playBeep(280, 'triangle', 0.08, 0.08);
+            }
+
+            startBGM() {
+                if (this.bgmTimer) clearInterval(this.bgmTimer);
+                if (this.muted) return;
+                this.init();
+
+                this.bgmTimer = setInterval(() => {
+                    if (this.muted) return;
+                    const freq = this.melody[this.noteIndex % this.melody.length];
+                    this.playBeep(freq, 'triangle', 0.18, 0.04);
+                    this.noteIndex++;
+                }, 280);
+            }
+
+            stopBGM() {
+                if (this.bgmTimer) {
+                    clearInterval(this.bgmTimer);
+                    this.bgmTimer = null;
+                }
+            }
+        }
+
+        const audio = new SoundSystem();
+
+        const PERUVIAN_RECIPES = [
+            { id: 'ceviche', name: 'Ceviche Tradicional', desc: 'Pescado fresco marinado en limón, ají limo, cebolla morada y camote.', unlocked: true, prepared: false, station: 'mesa_gourmet', steps: ['dice_fish', 'squeeze_lime', 'season_spices', 'marinate_mix'], ingredients: ['Pescado', 'Limón', 'Ají Limo', 'Cebolla Morada'] },
+            { id: 'lomo_saltado', name: 'Lomo Saltado', desc: 'Jugosos trozos de carne salteados al wok con cebolla, tomate y papas fritas.', unlocked: true, prepared: false, station: 'mesa_gourmet', steps: ['slice_meat', 'wok_flambe', 'fry_potatoes', 'combine_fries'], ingredients: ['Lomo de Res', 'Cebolla', 'Tomate', 'Papas'] },
+            { id: 'papa_huancaina', name: 'Papa a la Huancaína', desc: 'Papas sancochadas bañadas en cremosa salsa de queso fresco y ají amarillo.', unlocked: true, prepared: false, station: 'mesa_gourmet', steps: ['deseed_chili', 'blend_sauce', 'boil_potatoes', 'drizzle_plate'], ingredients: ['Papa', 'Queso Fresco', 'Ají Amarillo', 'Aceituna'] },
+            { id: 'rocoto_relleno', name: 'Rocoto Relleno', desc: 'Plato arequipeño picanterito, relleno de carne picada, queso derretido y especias.', unlocked: true, prepared: false, station: 'mesa_gourmet', steps: ['devein_rocoto', 'stuff_meat', 'season_spices', 'bake_cheese'], ingredients: ['Rocoto', 'Carne Picada', 'Queso', 'Pastel Papa'] },
+            { id: 'anticuchos', name: 'Anticuchos de Corazón', desc: 'Brochetas sazonadas con ají panca, comino, ajo y vinagre a la parrilla.', unlocked: true, prepared: false, station: 'mesa_gourmet', steps: ['skewer_meat', 'brush_panca', 'grill_fire', 'plating_choclo'], ingredients: ['Corazón Res', 'Ají Panca', 'Ajo', 'Choclo'] },
+            { id: 'causa_limena', name: 'Causa Limeña', desc: 'Pastel frío de papa amarilla prensada con ají, limón y relleno de pollo o atún.', unlocked: true, prepared: false, station: 'mesa_gourmet', steps: ['mash_potato', 'season_spices', 'layer_cause', 'garnish_egg'], ingredients: ['Papa Amarilla', 'Ají Amarillo', 'Limón', 'Pollo'] },
+            { id: 'aji_de_gallina', name: 'Ají de Gallina', desc: 'Crema espesa de ají amarillo, pechuga deshilachada, leche y aceitunas.', unlocked: true, prepared: false, station: 'mesa_gourmet', steps: ['shred_chicken', 'blend_sauce', 'stir_cream', 'add_olives'], ingredients: ['Pollo', 'Ají Amarillo', 'Pan/Leche', 'Aceituna'] },
+            { id: 'picarones', name: 'Picarones', desc: 'Anillos fritos crujientes de zapallo y camote bañados en miel de chancaca.', unlocked: true, prepared: false, station: 'mesa_gourmet', steps: ['mash_potato', 'shape_rings', 'deep_fry', 'drizzle_syrup'], ingredients: ['Camote', 'Zapallo', 'Chancaca', 'Anís'] }
+        ];
+
+        const TILE_SIZE = 32;
+        const MAP_COLS = 20;
+        const MAP_ROWS = 15;
+
+        // Rich & colorful kitchen stations definition
+        const KITCHEN_OBJECTS = [
+            { id: 'menu_board_all', x: 1, y: 0, w: 6, h: 3, color: '#311b92', trim: '#b388ff', label: 'RECETARIO RÚSTICO', type: 'menu_board', clue: 'Lista de platillos en recetario.', accent: '#7c4dff' },
+            { id: 'instr_board', x: 13, y: 0, w: 6, h: 3, color: '#004d40', trim: '#80cbc4', label: 'GUÍA DE COCINA', type: 'instr_board', clue: '¡Sigue los pasos tradicionales!', accent: '#26a69a' },
+
+            { id: 'refrige', x: 1, y: 3, w: 2, h: 4, color: '#1565c0', trim: '#90caf9', label: 'Conservador', type: 'search', items: ['Pescado', 'Lomo de Res', 'Pollo', 'Queso Fresco', 'Carne Picada', 'Corazón Res'], clue: '¡Has recolectado carnes y lácteos frescos!', icon: '❄️', accent: '#42a5f5' },
+            { id: 'spice_rack', x: 3, y: 3, w: 3, h: 2, color: '#b71c1c', trim: '#ff8a80', label: 'Tabla & Especias', type: 'search', items: ['Limón', 'Ají Limo', 'Cebolla Morada', 'Cebolla', 'Ají Amarillo', 'Rocoto', 'Ají Panca', 'Ajo', 'Aceituna'], clue: '¡Has recolectado ajíes y limones!', icon: '🌶️', accent: '#ef5350' },
+            { id: 'oven_stove', x: 16, y: 3, w: 3, h: 4, color: '#d84315', trim: '#ffab91', label: 'Fogón de Piedra', type: 'search', items: ['Papas', 'Papa', 'Papa Amarilla', 'Camote', 'Zapallo', 'Chancaca', 'Anís'], clue: '¡Has recolectado papas y tubérculos!', icon: '🔥', accent: '#ff7043' },
+            { id: 'plant_corner', x: 16, y: 10, w: 3, h: 4, color: '#2e7d32', trim: '#a5d6a7', label: 'Cosecha Fresca', type: 'search', items: ['Tomate', 'Choclo', 'Pastel Papa'], clue: '¡Has recolectado vegetal fresco!', icon: '🌿', accent: '#66bb6a' },
+            { id: 'plant_left', x: 1, y: 10, w: 3, h: 4, color: '#00695c', trim: '#80dfea', label: 'Despensa Andina', type: 'search', items: ['Pan/Leche', 'Queso'], clue: '¡Insumos añadidos a tu despensa!', icon: '🪴', accent: '#26c6da' },
+            { id: 'bar_counter', x: 6, y: 3, w: 7, h: 2, color: '#4a148c', trim: '#e1bee7', label: 'Barra Tradicional', type: 'search', items: [], clue: '¡Jarra de chicha morada natural!', icon: '🏺', accent: '#ab47bc' },
+
+            { id: 'mesa_gourmet', x: 8, y: 7, w: 4, h: 4, color: '#f57f17', trim: '#fff59d', label: 'Mesa Central', type: 'cook_station', clue: 'Selecciona una receta para iniciar.', accent: '#ffee58' }
+        ];
+
+        const STEP_STATIONS = {
+            'dice_fish': 'refrige', 'slice_meat': 'refrige', 'skewer_meat': 'refrige', 'shred_chicken': 'refrige',
+            'squeeze_lime': 'spice_rack', 'season_spices': 'spice_rack', 'deseed_chili': 'spice_rack', 'devein_rocoto': 'spice_rack', 'blend_sauce': 'spice_rack', 'brush_panca': 'spice_rack', 'syrup_drizzle': 'spice_rack',
+            'wok_flambe': 'oven_stove', 'fry_potatoes': 'oven_stove', 'boil_potatoes': 'oven_stove', 'bake_cheese': 'oven_stove', 'grill_fire': 'oven_stove', 'stir_cream': 'oven_stove', 'deep_fry': 'oven_stove',
+            'marinate_mix': 'mesa_gourmet', 'combine_fries': 'mesa_gourmet', 'drizzle_plate': 'mesa_gourmet', 'stuff_meat': 'mesa_gourmet', 'plating_choclo': 'mesa_gourmet', 'mash_potato': 'mesa_gourmet', 'layer_cause': 'mesa_gourmet', 'garnish_egg': 'mesa_gourmet', 'add_olives': 'mesa_gourmet', 'shape_rings': 'mesa_gourmet'
+        };
+
+        const STATION_NAMES = {
+            'refrige': 'Conservador',
+            'spice_rack': 'Tabla & Especias',
+            'oven_stove': 'Fogón de Piedra',
+            'mesa_gourmet': 'Mesa Central'
+        };
+
+        class MinigameRenderer {
+            static renderSqueezeLimeMinigame(container, onComplete) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center gap-3 w-full max-w-xs">
+                        <div class="text-5xl animate-bounce">🍋🥣</div>
+                        <p class="text-xs text-amber-200 text-center font-bold">¡Exprime el jugo fresco de limón!</p>
+                        <button id="squeezeBtn" class="pixel-btn px-6 py-3 rounded-xl text-xs font-bold">¡EXPRIMIR! (0/4)</button>
+                    </div>
+                `;
+                let count = 0;
+                const btn = document.getElementById('squeezeBtn');
+                btn.onclick = () => {
+                    count++;
+                    audio.playSizzle();
+                    btn.innerText = `¡EXPRIMIR! (${count}/4)`;
+                    if (count >= 4) setTimeout(() => onComplete(), 150);
+                };
+            }
+
+            static renderSeasoningMinigame(container, onComplete) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center gap-3 w-full max-w-xs">
+                        <div class="text-5xl animate-bounce">🧂🌶️</div>
+                        <p class="text-xs text-amber-200 text-center font-bold">¡Sazona con ají limo y sal!</p>
+                        <button id="seasonBtn" class="pixel-btn px-6 py-3 rounded-xl text-xs font-bold">¡SAZONAR! (0/3)</button>
+                    </div>
+                `;
+                let count = 0;
+                const btn = document.getElementById('seasonBtn');
+                btn.onclick = () => {
+                    count++;
+                    audio.playBeep(350 + count * 40, 'triangle', 0.1, 0.1);
+                    btn.innerText = `¡SAZONAR! (${count}/3)`;
+                    if (count >= 3) setTimeout(() => onComplete(), 150);
+                };
+            }
+
+            static renderFlambeMinigame(container, onComplete) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center gap-3 w-full max-w-xs">
+                        <div class="text-5xl animate-pulse">🔥🍳</div>
+                        <p class="text-xs text-amber-200 text-center font-bold">¡Saltea al wok al fuego!</p>
+                        <button id="flambeBtn" class="pixel-btn px-6 py-3 rounded-xl text-xs font-bold">¡SALTEAR! (0/5)</button>
+                    </div>
+                `;
+                let count = 0;
+                const btn = document.getElementById('flambeBtn');
+                btn.onclick = () => {
+                    count++;
+                    audio.playSizzle();
+                    btn.innerText = `¡SALTEAR! (${count}/5)`;
+                    if (count >= 5) setTimeout(() => onComplete(), 150);
+                };
+            }
+
+            static renderDeseedChiliMinigame(container, onComplete) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center gap-3 w-full max-w-xs">
+                        <div class="text-5xl animate-bounce">🌶️🔪</div>
+                        <p class="text-xs text-amber-200 text-center font-bold">¡Retira venas y semillas del ají!</p>
+                        <button id="deseedBtn" class="pixel-btn px-6 py-3 rounded-xl text-xs font-bold">¡LIMPIAR AJÍ! (0/4)</button>
+                    </div>
+                `;
+                let count = 0;
+                const btn = document.getElementById('deseedBtn');
+                btn.onclick = () => {
+                    count++;
+                    audio.playChop();
+                    btn.innerText = `¡LIMPIAR AJÍ! (${count}/4)`;
+                    if (count >= 4) setTimeout(() => onComplete(), 150);
+                };
+            }
+
+            static renderBlendSauceMinigame(container, onComplete) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center gap-3 w-full max-w-xs">
+                        <div class="text-5xl">🌪️🧀</div>
+                        <p class="text-xs text-amber-200 text-center font-bold">¡Mezcla la salsa huancaína!</p>
+                        <button id="blendBtn" class="pixel-btn px-6 py-3 rounded-xl text-xs font-bold">¡LICUAR! (0/4)</button>
+                    </div>
+                `;
+                let count = 0;
+                const btn = document.getElementById('blendBtn');
+                btn.onclick = () => {
+                    count++;
+                    audio.playBeep(250 + count * 50, 'sine', 0.1, 0.1);
+                    btn.innerText = `¡LICUAR! (${count}/4)`;
+                    if (count >= 4) setTimeout(() => onComplete(), 150);
+                };
+            }
+
+            static renderSkewerMinigame(container, onComplete) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center gap-3 w-full max-w-xs">
+                        <div class="text-5xl animate-bounce">🍢🥩</div>
+                        <p class="text-xs text-amber-200 text-center font-bold">¡Ensarta la carne en brochetas!</p>
+                        <button id="skewerBtn" class="pixel-btn px-6 py-3 rounded-xl text-xs font-bold">¡ENSARTAR! (0/4)</button>
+                    </div>
+                `;
+                let count = 0;
+                const btn = document.getElementById('skewerBtn');
+                btn.onclick = () => {
+                    count++;
+                    audio.playChop();
+                    btn.innerText = `¡ENSARTAR! (${count}/4)`;
+                    if (count >= 4) setTimeout(() => onComplete(), 150);
+                };
+            }
+
+            static renderBrushPancaMinigame(container, onComplete) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center gap-3 w-full max-w-xs">
+                        <div class="text-5xl animate-bounce">🖌️🍢</div>
+                        <p class="text-xs text-amber-200 text-center font-bold">¡Pincela con ají panca!</p>
+                        <button id="brushBtn" class="pixel-btn px-6 py-3 rounded-xl text-xs font-bold">¡PINCELAR! (0/3)</button>
+                    </div>
+                `;
+                let count = 0;
+                const btn = document.getElementById('brushBtn');
+                btn.onclick = () => {
+                    count++;
+                    audio.playSizzle();
+                    btn.innerText = `¡PINCELAR! (${count}/3)`;
+                    if (count >= 3) setTimeout(() => onComplete(), 150);
+                };
+            }
+
+            static renderMashPotatoMinigame(container, onComplete) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center gap-3 w-full max-w-xs">
+                        <div class="text-5xl animate-bounce">🥔🔨</div>
+                        <p class="text-xs text-amber-200 text-center font-bold">¡Prensa la papa amarilla!</p>
+                        <button id="mashBtn" class="pixel-btn px-6 py-3 rounded-xl text-xs font-bold">¡PRENSAR! (0/5)</button>
+                    </div>
+                `;
+                let count = 0;
+                const btn = document.getElementById('mashBtn');
+                btn.onclick = () => {
+                    count++;
+                    audio.playBeep(200 + count * 20, 'triangle', 0.1, 0.1);
+                    btn.innerText = `¡PRENSAR! (${count}/5)`;
+                    if (count >= 5) setTimeout(() => onComplete(), 150);
+                };
+            }
+
+            static renderLayerCausaMinigame(container, onComplete) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center gap-3 w-full max-w-xs">
+                        <div class="text-5xl animate-bounce">🥞🥑</div>
+                        <p class="text-xs text-amber-200 text-center font-bold">¡Arma las capas con palta y relleno!</p>
+                        <button id="layerBtn" class="pixel-btn px-6 py-3 rounded-xl text-xs font-bold">¡ARMAR CAPAS! (0/3)</button>
+                    </div>
+                `;
+                let count = 0;
+                const btn = document.getElementById('layerBtn');
+                btn.onclick = () => {
+                    count++;
+                    audio.playBeep(400 + count * 30, 'sine', 0.1, 0.1);
+                    btn.innerText = `¡ARMAR CAPAS! (${count}/3)`;
+                    if (count >= 3) setTimeout(() => onComplete(), 150);
+                };
+            }
+
+            static renderShredChickenMinigame(container, onComplete) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center gap-3 w-full max-w-xs">
+                        <div class="text-5xl animate-bounce">🍗👐</div>
+                        <p class="text-xs text-amber-200 text-center font-bold">¡Deshilacha la pechuga!</p>
+                        <button id="shredBtn" class="pixel-btn px-6 py-3 rounded-xl text-xs font-bold">¡DESHILACHAR! (0/5)</button>
+                    </div>
+                `;
+                let count = 0;
+                const btn = document.getElementById('shredBtn');
+                btn.onclick = () => {
+                    count++;
+                    audio.playChop();
+                    btn.innerText = `¡DESHILACHAR! (${count}/5)`;
+                    if (count >= 5) setTimeout(() => onComplete(), 150);
+                };
+            }
+
+            static renderStirCreamMinigame(container, onComplete) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center gap-3 w-full max-w-xs">
+                        <div class="text-5xl">🍲🥄</div>
+                        <p class="text-xs text-amber-200 text-center font-bold">¡Remueve la crema suavemente!</p>
+                        <button id="stirBtn" class="pixel-btn px-6 py-3 rounded-xl text-xs font-bold">¡REMOVER! (0/4)</button>
+                    </div>
+                `;
+                let count = 0;
+                const btn = document.getElementById('stirBtn');
+                btn.onclick = () => {
+                    count++;
+                    audio.playSizzle();
+                    btn.innerText = `¡REMOVER! (${count}/4)`;
+                    if (count >= 4) setTimeout(() => onComplete(), 150);
+                };
+            }
+
+            static renderShapeRingsMinigame(container, onComplete) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center gap-3 w-full max-w-xs">
+                        <div class="text-5xl animate-bounce">🍩👌</div>
+                        <p class="text-xs text-amber-200 text-center font-bold">¡Forma los aros de picarón!</p>
+                        <button id="shapeBtn" class="pixel-btn px-6 py-3 rounded-xl text-xs font-bold">¡ARMAR ARO! (0/4)</button>
+                    </div>
+                `;
+                let count = 0;
+                const btn = document.getElementById('shapeBtn');
+                btn.onclick = () => {
+                    count++;
+                    audio.playBeep(320 + count * 25, 'sine', 0.1, 0.1);
+                    btn.innerText = `¡ARMAR ARO! (${count}/4)`;
+                    if (count >= 4) setTimeout(() => onComplete(), 150);
+                };
+            }
+
+            static renderSyrupDrizzleMinigame(container, onComplete) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center gap-3 w-full max-w-xs">
+                        <div class="text-5xl animate-bounce">🍯🍩</div>
+                        <p class="text-xs text-amber-200 text-center font-bold">¡Baña con miel de chancaca!</p>
+                        <button id="syrupBtn" class="pixel-btn px-6 py-3 rounded-xl text-xs font-bold">¡VERTIR MIEL! (0/4)</button>
+                    </div>
+                `;
+                let count = 0;
+                const btn = document.getElementById('syrupBtn');
+                btn.onclick = () => {
+                    count++;
+                    audio.playSizzle();
+                    btn.innerText = `¡VERTIR MIEL! (${count}/4)`;
+                    if (count >= 4) setTimeout(() => onComplete(), 150);
+                };
+            }
+
+            static renderChopMinigame(container, onComplete) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center gap-3 w-full max-w-xs">
+                        <div class="text-5xl animate-bounce">🐟🔪</div>
+                        <p class="text-xs text-amber-200 text-center font-bold">¡Trocea finamente los insumos!</p>
+                        <button id="chopBtn" class="pixel-btn px-6 py-3 rounded-xl text-xs font-bold">¡CORTAR! (0/5)</button>
+                    </div>
+                `;
+                let chops = 0;
+                const btn = document.getElementById('chopBtn');
+                btn.onclick = () => {
+                    chops++;
+                    audio.playChop();
+                    btn.innerText = `¡CORTAR! (${chops}/5)`;
+                    if (chops >= 5) setTimeout(() => onComplete(), 150);
+                };
+            }
+
+            static renderMixMinigame(container, onComplete) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center gap-3 w-full max-w-xs">
+                        <div class="text-5xl">🥣🥄</div>
+                        <p class="text-xs text-amber-200 text-center font-bold">¡Mezcla suavemente!</p>
+                        <button id="mixBtn" class="pixel-btn px-6 py-3 rounded-xl text-xs font-bold">¡MEZCLAR! (0/4)</button>
+                    </div>
+                `;
+                let clicks = 0;
+                const btn = document.getElementById('mixBtn');
+                btn.onclick = () => {
+                    clicks++;
+                    audio.playBeep(300 + clicks * 30, 'triangle', 0.08, 0.1);
+                    btn.innerText = `¡MEZCLAR! (${clicks}/4)`;
+                    if (clicks >= 4) setTimeout(() => onComplete(), 150);
+                };
+            }
+
+            static renderHeatMinigame(container, onComplete) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center gap-3 w-full max-w-xs">
+                        <div class="text-5xl animate-pulse">🔥🍳</div>
+                        <p class="text-xs text-amber-200 text-center font-bold">¡Cocina en el fogón!</p>
+                        <button id="heatBtn" class="pixel-btn px-6 py-3 rounded-xl text-xs font-bold">¡COCINAR! (0%)</button>
+                    </div>
+                `;
+                let progress = 0;
+                const btn = document.getElementById('heatBtn');
+                btn.onclick = () => {
+                    progress += 25;
+                    audio.playSizzle();
+                    btn.innerText = `¡COCINAR! (${progress}%)`;
+                    if (progress >= 100) setTimeout(() => onComplete(), 150);
+                };
+            }
+
+            static renderPlatingMinigame(container, recipe, onComplete) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center gap-3 w-full max-w-xs">
+                        <div class="text-6xl animate-bounce">🍽️✨</div>
+                        <p class="text-xs text-amber-200 text-center font-bold">¡Sirve en la Mesa Central!</p>
+                        <button id="plateBtn" class="pixel-btn px-6 py-3 rounded-xl text-xs font-bold">¡SERVIR PLATILLO!</button>
+                    </div>
+                `;
+                const btn = document.getElementById('plateBtn');
+                btn.onclick = () => {
+                    audio.playSuccess();
+                    onComplete();
+                };
+            }
+        }
+
+        class Player {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.facing = 'down';
+            }
+
+            move(dir, engine) {
+                this.facing = dir;
+                let nextX = this.x;
+                let nextY = this.y;
+
+                if (dir === 'up') nextY--;
+                if (dir === 'down') nextY++;
+                if (dir === 'left') nextX--;
+                if (dir === 'right') nextX++;
+
+                if (nextX >= 0 && nextX < MAP_COLS && nextY >= 0 && nextY < MAP_ROWS) {
+                    if (!engine.isBlockedTile(nextX, nextY)) {
+                        this.x = nextX;
+                        this.y = nextY;
+                    }
+                }
+            }
+
+            getFacingTile() {
+                let fx = this.x;
+                let fy = this.y;
+                if (this.facing === 'up') fy--;
+                if (this.facing === 'down') fy++;
+                if (this.facing === 'left') fx--;
+                if (this.facing === 'right') fx++;
+                return { x: fx, y: fy };
+            }
+
+            draw(ctx) {
+                const px = this.x * TILE_SIZE;
+                const py = this.y * TILE_SIZE;
+
+                // Soft dynamic shadow
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+                ctx.beginPath();
+                ctx.ellipse(px + 16, py + 29, 12, 5, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Vibrant Chef Jacket (Bright Crimson & Gold Accents)
+                ctx.fillStyle = '#dc2626';
+                ctx.fillRect(px + 7, py + 10, 18, 17);
+
+                // Peruvian Gold Scarf
+                ctx.fillStyle = '#f59e0b';
+                ctx.fillRect(px + 8, py + 10, 16, 4);
+
+                // Earthy Brown Apron with Gold Rim
+                ctx.fillStyle = '#78350f';
+                ctx.fillRect(px + 9, py + 16, 14, 11);
+                ctx.fillStyle = '#f59e0b';
+                ctx.fillRect(px + 9, py + 16, 14, 2);
+
+                // Warm Skin Tone
+                ctx.fillStyle = '#f59e0b';
+                ctx.fillRect(px + 9, py + 4, 14, 9);
+
+                // Classic Tall White Chef Hat
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(px + 5, py - 6, 22, 10);
+                ctx.fillRect(px + 7, py - 11, 18, 6);
+                ctx.fillStyle = '#dc2626';
+                ctx.fillRect(px + 5, py + 2, 22, 2);
+
+                // Facial details
+                ctx.fillStyle = '#1c1917';
+                if (this.facing === 'down') {
+                    ctx.fillRect(px + 11, py + 7, 2, 3);
+                    ctx.fillRect(px + 19, py + 7, 2, 3);
+                    // Cheerful rosy cheeks
+                    ctx.fillStyle = '#f87171';
+                    ctx.fillRect(px + 9, py + 9, 2, 2);
+                    ctx.fillRect(px + 21, py + 9, 2, 2);
+                } else if (this.facing === 'left') {
+                    ctx.fillRect(px + 10, py + 7, 2, 3);
+                } else if (this.facing === 'right') {
+                    ctx.fillRect(px + 20, py + 7, 2, 3);
+                }
+            }
+        }
+
+        class GameEngine {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.player = new Player(10, 13);
+                this.keys = {};
+                this.dialogueActive = false;
+                this.inventory = new Set();
+                this.activeCookingOrder = null;
+
+                this.moveCooldown = 0;
+                this.moveCooldownMax = 6;
+                this.animFrame = 0;
+
+                this.initInput();
+                this.updateUIStatus();
+            }
+
+            initInput() {
+                window.addEventListener('keydown', (e) => {
+                    this.keys[e.key] = true;
+                    if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) {
+                        if (this.dialogueActive) {
+                            this.closeDialogue();
+                        } else {
+                            this.interact();
+                        }
+                    }
+                });
+
+                window.addEventListener('keyup', (e) => {
+                    this.keys[e.key] = false;
+                });
+
+                const bindBtn = (id, dir) => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    const handler = (e) => {
+                        e.preventDefault();
+                        if (this.moveCooldown <= 0) {
+                            this.player.move(dir, this);
+                            this.moveCooldown = this.moveCooldownMax;
+                        }
+                    };
+                    el.addEventListener('touchstart', handler);
+                    el.addEventListener('mousedown', handler);
+                };
+
+                bindBtn('btnUp', 'up');
+                bindBtn('btnDown', 'down');
+                bindBtn('btnLeft', 'left');
+                bindBtn('btnRight', 'right');
+
+                document.getElementById('btnAction').addEventListener('click', () => {
+                    if (this.dialogueActive) {
+                        this.closeDialogue();
+                    } else {
+                        this.interact();
+                    }
+                });
+
+                document.getElementById('dialogueBox').addEventListener('click', () => {
+                    if (this.dialogueActive) this.closeDialogue();
+                });
+
+                document.getElementById('startGameBtn').addEventListener('click', () => {
+                    document.getElementById('introModal').classList.add('hidden');
+                    audio.muted = false;
+                    audio.startBGM();
+                    const soundIcon = document.getElementById('soundIcon');
+                    soundIcon.className = 'fa-solid fa-volume-high text-amber-300';
+                    document.getElementById('soundToggleBtn').innerHTML = '<i id="soundIcon" class="fa-solid fa-volume-high text-amber-300"></i> Audio: ON';
+                    audio.playSuccess();
+                });
+
+                document.getElementById('closeDishSelectBtn').addEventListener('click', () => {
+                    document.getElementById('dishSelectModal').classList.add('hidden');
+                });
+            }
+
+            isBlockedTile(x, y) {
+                for (let obj of KITCHEN_OBJECTS) {
+                    if (x >= obj.x && x < obj.x + obj.w && y >= obj.y && y < obj.y + obj.h) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            update() {
+                this.animFrame++;
+
+                if (this.moveCooldown > 0) {
+                    this.moveCooldown--;
+                }
+
+                if (this.dialogueActive) return;
+
+                if (this.moveCooldown <= 0) {
+                    let dir = null;
+                    if (this.keys['ArrowUp'] || this.keys['w'] || this.keys['W']) dir = 'up';
+                    else if (this.keys['ArrowDown'] || this.keys['s'] || this.keys['S']) dir = 'down';
+                    else if (this.keys['ArrowLeft'] || this.keys['a'] || this.keys['A']) dir = 'left';
+                    else if (this.keys['ArrowRight'] || this.keys['d'] || this.keys['D']) dir = 'right';
+
+                    if (dir) {
+                        this.player.move(dir, this);
+                        this.moveCooldown = this.moveCooldownMax;
+                    }
+                }
+            }
+
+            render() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Muted & warm rustic floor tiles with reduced saturation
+                for (let r = 0; r < MAP_ROWS; r++) {
+                    for (let c = 0; c < MAP_COLS; c++) {
+                        // Soft alternate terracotta & muted wood tones
+                        if ((r + c) % 2 === 0) {
+                            this.ctx.fillStyle = '#4a3028'; // Soft desaturated terracotta/brown
+                        } else {
+                            this.ctx.fillStyle = '#3d2720'; // Muted dark clay
+                        }
+                        this.ctx.fillRect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+
+                        // Subtle tile highlights
+                        this.ctx.fillStyle = 'rgba(255, 235, 210, 0.03)';
+                        this.ctx.fillRect(c * TILE_SIZE + 4, r * TILE_SIZE + 4, TILE_SIZE - 8, TILE_SIZE - 8);
+
+                        // Soft low-contrast tile borders
+                        this.ctx.strokeStyle = '#2b1b16';
+                        this.ctx.lineWidth = 0.5;
+                        this.ctx.strokeRect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    }
+                }
+
+                // Decorative Inca / Peruvian Top Border
+                this.ctx.fillStyle = '#261713';
+                this.ctx.fillRect(0, 0, MAP_COLS * TILE_SIZE, TILE_SIZE / 2);
+                this.ctx.fillStyle = '#8c531d';
+                this.ctx.fillRect(0, TILE_SIZE / 2 - 3, MAP_COLS * TILE_SIZE, 3);
+
+                // Draw Kitchen Furniture and Stations
+                for (let obj of KITCHEN_OBJECTS) {
+                    const ox = obj.x * TILE_SIZE;
+                    const oy = obj.y * TILE_SIZE;
+                    const ow = obj.w * TILE_SIZE;
+                    const oh = obj.h * TILE_SIZE;
+
+                    // Base Furniture Structure
+                    this.ctx.fillStyle = obj.color;
+                    this.ctx.fillRect(ox, oy, ow, oh);
+
+                    // Colorful Accent Top Bar
+                    if (obj.accent) {
+                        this.ctx.fillStyle = obj.accent;
+                        this.ctx.fillRect(ox, oy, ow, 5);
+                    }
+
+                    this.ctx.strokeStyle = obj.trim;
+                    this.ctx.lineWidth = 2;
+                    this.ctx.strokeRect(ox, oy, ow, oh);
+
+                    // Label Header
+                    this.ctx.fillStyle = '#ffffff';
+                    this.ctx.font = 'bold 8px "Press Start 2P"';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText(obj.label, ox + ow / 2, oy + 12);
+
+                    // STATION VISUAL DETAILS
+                    if (obj.id === 'mesa_gourmet') {
+                        // Gourmet Table Plate & Flame Effect
+                        this.ctx.fillStyle = '#78350f';
+                        this.ctx.fillRect(ox + 6, oy + 18, ow - 12, oh - 22);
+
+                        // Ceramic Plates
+                        this.ctx.fillStyle = '#fef3c7';
+                        this.ctx.beginPath();
+                        this.ctx.ellipse(ox + 26, oy + 42, 13, 9, 0, 0, Math.PI * 2);
+                        this.ctx.fill();
+                        this.ctx.strokeStyle = '#f59e0b';
+                        this.ctx.lineWidth = 1.5;
+                        this.ctx.stroke();
+
+                        this.ctx.beginPath();
+                        this.ctx.ellipse(ox + ow - 26, oy + 42, 13, 9, 0, 0, Math.PI * 2);
+                        this.ctx.fill();
+                        this.ctx.stroke();
+
+                        // Food Garnishes
+                        this.ctx.fillStyle = '#ef4444';
+                        this.ctx.fillRect(ox + 22, oy + 40, 7, 3);
+                        this.ctx.fillStyle = '#10b981';
+                        this.ctx.fillRect(ox + 26, oy + 38, 4, 3);
+
+                        this.ctx.fillStyle = '#f59e0b';
+                        this.ctx.fillRect(ox + ow - 29, oy + 40, 7, 3);
+
+                        // Gentle Steam Effect
+                        const offsetSteam = Math.sin(this.animFrame / 12) * 2;
+                        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                        this.ctx.beginPath();
+                        this.ctx.arc(ox + 26, oy + 26 + offsetSteam, 3, 0, Math.PI * 2);
+                        this.ctx.arc(ox + ow - 26, oy + 25 - offsetSteam, 3, 0, Math.PI * 2);
+                        this.ctx.fill();
+
+                    } else if (obj.id === 'oven_stove') {
+                        // Stove & Fire Glow
+                        this.ctx.fillStyle = '#1c1917';
+                        this.ctx.fillRect(ox + 8, oy + 20, ow - 16, oh - 26);
+
+                        // Fire Burners with animated flicker
+                        const fireColor = (this.animFrame % 20 < 10) ? '#f97316' : '#ef4444';
+                        this.ctx.fillStyle = fireColor;
+                        this.ctx.beginPath();
+                        this.ctx.arc(ox + 26, oy + 42, 10, 0, Math.PI * 2);
+                        this.ctx.arc(ox + ow - 26, oy + 42, 10, 0, Math.PI * 2);
+                        this.ctx.fill();
+
+                    } else if (obj.id === 'refrige') {
+                        // Conservador Metal Details
+                        this.ctx.fillStyle = '#e0f2fe';
+                        this.ctx.fillRect(ox + ow - 10, oy + 20, 3, 26);
+
+                    } else if (obj.id === 'spice_rack') {
+                        // Jars & Board
+                        this.ctx.fillStyle = '#d97706';
+                        this.ctx.fillRect(ox + 8, oy + 20, ow - 16, 16);
+                        this.ctx.fillStyle = '#ef4444';
+                        this.ctx.fillRect(ox + 14, oy + 22, 5, 8);
+                        this.ctx.fillStyle = '#10b981';
+                        this.ctx.fillRect(ox + 24, oy + 22, 5, 8);
+
+                    } else if (obj.icon) {
+                        this.ctx.font = '16px sans-serif';
+                        this.ctx.fillText(obj.icon, ox + ow / 2, oy + oh / 2 + 10);
+                    }
+                }
+
+                // Draw Player
+                this.player.draw(this.ctx);
+
+                // Target Station Highlight (Glow & Pointer)
+                if (this.activeCookingOrder) {
+                    const recipe = this.activeCookingOrder.recipe;
+                    const stepIdx = this.activeCookingOrder.currentStepIndex;
+                    const stepType = recipe.steps[stepIdx];
+                    const targetStationId = STEP_STATIONS[stepType] || 'mesa_gourmet';
+                    const targetObj = KITCHEN_OBJECTS.find(o => o.id === targetStationId);
+
+                    if (targetObj) {
+                        const ox = targetObj.x * TILE_SIZE;
+                        const oy = targetObj.y * TILE_SIZE;
+                        const ow = targetObj.w * TILE_SIZE;
+                        const oh = targetObj.h * TILE_SIZE;
+
+                        const pulse = (Math.sin(Date.now() / 150) + 1) / 2;
+                        this.ctx.strokeStyle = `rgba(245, 158, 11, ${0.7 + pulse * 0.3})`;
+                        this.ctx.lineWidth = 4 + pulse * 2;
+                        this.ctx.strokeRect(ox - 3, oy - 3, ow + 6, oh + 6);
+
+                        this.ctx.fillStyle = '#fef08a';
+                        this.ctx.font = 'bold 9px "Press Start 2P"';
+                        this.ctx.textAlign = 'center';
+                        this.ctx.fillText("📍 AQUÍ", ox + ow / 2, oy - 8);
+                    }
+                }
+
+                // Facing Tile Cursor
+                const facing = this.player.getFacingTile();
+                this.ctx.strokeStyle = '#f59e0b';
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(facing.x * TILE_SIZE + 2, facing.y * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+            }
+
+            interact() {
+                const facing = this.player.getFacingTile();
+                const targetObj = KITCHEN_OBJECTS.find(o => 
+                    facing.x >= o.x && facing.x < o.x + o.w &&
+                    facing.y >= o.y && facing.y < o.y + o.h
+                );
+
+                if (this.activeCookingOrder) {
+                    const currentRecipe = this.activeCookingOrder.recipe;
+                    const stepIdx = this.activeCookingOrder.currentStepIndex;
+                    const stepType = currentRecipe.steps[stepIdx];
+                    const requiredStationId = STEP_STATIONS[stepType] || 'mesa_gourmet';
+
+                    if (targetObj && targetObj.id === requiredStationId) {
+                        this.executeCurrentStepMinigame();
+                        return;
+                    } else if (targetObj) {
+                        const targetStationName = STATION_NAMES[requiredStationId] || 'la estación correspondiente';
+                        this.showDialogue(
+                            "Paso Incorrecto",
+                            `Para el paso ${stepIdx + 1}/4 de ${currentRecipe.name}, ve a: [${targetStationName}]`
+                        );
+                        audio.playBeep(200, 'triangle', 0.15, 0.1);
+                        return;
+                    }
+                }
+
+                if (targetObj) {
+                    if (targetObj.type === 'search') {
+                        if (targetObj.items && targetObj.items.length > 0) {
+                            targetObj.items.forEach(item => this.inventory.add(item));
+                            this.showDialogue(targetObj.label, `${targetObj.clue}\n\nAgregado a tu despensa:\n• ${targetObj.items.join('\n• ')}`);
+                        } else {
+                            this.showDialogue(targetObj.label, targetObj.clue);
+                        }
+                        audio.playSuccess();
+                        this.updateUIStatus();
+                    } else if (targetObj.type === 'menu_board') {
+                        let text = "RECETARIO TRADICIONAL:\n";
+                        PERUVIAN_RECIPES.forEach((r, idx) => {
+                            const status = r.prepared ? ' [✓ Hecho]' : ' [• Pendiente]';
+                            text += `${idx + 1}. ${r.name}${status}\n`;
+                        });
+                        this.showDialogue("Recetario", text);
+                        audio.playBeep(480, 'sine', 0.1, 0.1);
+                    } else if (targetObj.type === 'instr_board') {
+                        this.showDialogue("Guía", "1. Junta ingredientes en los estantes.\n2. Ve a la Mesa Central para seleccionar platillo.\n3. Completa los 4 pasos en las estaciones.");
+                        audio.playBeep(500, 'sine', 0.1, 0.1);
+                    } else if (targetObj.type === 'cook_station') {
+                        if (this.activeCookingOrder) {
+                            this.showDialogue("Preparación en Curso", `Estás preparando: ${this.activeCookingOrder.recipe.name}.\n¡Dirígete a la estación marcada con la flecha!`);
+                        } else {
+                            this.openDishSelector();
+                        }
+                    }
+                } else {
+                    if (this.activeCookingOrder) {
+                        const currentRecipe = this.activeCookingOrder.recipe;
+                        const stepIdx = this.activeCookingOrder.currentStepIndex;
+                        const stepType = currentRecipe.steps[stepIdx];
+                        const requiredStationId = STEP_STATIONS[stepType] || 'mesa_gourmet';
+                        const targetStationName = STATION_NAMES[requiredStationId] || 'la estación requerida';
+                        this.showDialogue("Paso Actual", `Paso ${stepIdx + 1}/4 de ${currentRecipe.name}: Acércate a [${targetStationName}].`);
+                    } else {
+                        this.showDialogue("Cocina Peruana", "¡Acércate a los estantes para juntar insumos y ve a la Mesa Central!");
+                    }
+                }
+            }
+
+            showDialogue(title, text) {
+                this.dialogueActive = true;
+                document.getElementById('dialogueTitle').innerText = `=== ${title} ===`;
+                document.getElementById('dialogueText').innerText = text;
+                document.getElementById('dialogueBox').classList.remove('hidden');
+            }
+
+            closeDialogue() {
+                this.dialogueActive = false;
+                document.getElementById('dialogueBox').classList.add('hidden');
+            }
+
+            updateUIStatus() {
+                const count = PERUVIAN_RECIPES.filter(r => r.prepared).length;
+                document.getElementById('unlockedCount').innerText = count;
+
+                // Permanent On-screen Menu List
+                const menuListEl = document.getElementById('quickMenuList');
+                if (menuListEl) {
+                    menuListEl.innerHTML = PERUVIAN_RECIPES.map(r => `
+                        <div class="flex items-center gap-1.5">
+                            <span class="${r.prepared ? 'text-emerald-400 font-bold' : 'text-stone-500'}">${r.prepared ? '✓' : '•'}</span>
+                            <span class="truncate ${r.prepared ? 'line-through text-stone-400' : 'text-stone-200 font-medium'}">${r.name}</span>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            hasAllIngredients(recipe) {
+                return recipe.ingredients.every(item => this.inventory.has(item));
+            }
+
+            openDishSelector() {
+                const modal = document.getElementById('dishSelectModal');
+                const grid = document.getElementById('dishGrid');
+                grid.innerHTML = '';
+
+                PERUVIAN_RECIPES.forEach((recipe) => {
+                    const hasItems = this.hasAllIngredients(recipe);
+                    const card = document.createElement('div');
+                    card.className = `p-3.5 rounded-2xl border flex flex-col justify-between cursor-pointer transition-all ${recipe.prepared ? 'bg-gradient-to-br from-emerald-950/80 to-stone-900 border-emerald-600/50' : (hasItems ? 'bg-gradient-to-br from-amber-950/80 to-stone-900 border-amber-500/60' : 'bg-stone-900/80 border-stone-800')}`;
+                    
+                    const ingredientsList = recipe.ingredients.map(ing => {
+                        const hasIng = this.inventory.has(ing);
+                        return `<span class="${hasIng ? 'text-emerald-400 font-bold' : 'text-stone-500'}">${ing}${hasIng ? '✓' : '✗'}</span>`;
+                    }).join(', ');
+
+                    card.innerHTML = `
+                        <div>
+                            <div class="flex justify-between items-center mb-1.5">
+                                <span class="font-bold text-amber-200 text-xs md:text-sm">${recipe.name}</span>
+                                <span class="text-[10px] px-2.5 py-0.5 rounded-full font-bold ${recipe.prepared ? 'bg-emerald-800 text-emerald-100' : (hasItems ? 'bg-amber-600 text-amber-950' : 'bg-stone-800 text-stone-400')}">
+                                    ${recipe.prepared ? 'Completado ✓' : (hasItems ? '¡Listo!' : 'Faltan insumos')}
+                                </span>
+                            </div>
+                            <p class="text-xs text-stone-300 my-1 leading-relaxed">${recipe.desc}</p>
+                            <p class="text-[10px] mt-1 text-stone-400">Insumos: ${ingredientsList}</p>
+                        </div>
+                        <button class="pixel-btn ${recipe.prepared ? 'pixel-btn-secondary' : ''} mt-3 py-2 px-2 text-[10px] w-full rounded-xl">
+                            ${recipe.prepared ? 'Volver a Preparar' : (hasItems ? '¡Iniciar Receta!' : 'Buscar Insumos')}
+                        </button>
+                    `;
+
+                    card.onclick = () => {
+                        if (!this.hasAllIngredients(recipe)) {
+                            modal.classList.add('hidden');
+                            this.showDialogue(
+                                "Ingredientes Incompletos",
+                                "Explora la cocina e interactúa con los estantes, nevera y huerto para reunir los insumos requeridos."
+                            );
+                            audio.playBeep(180, 'triangle', 0.25, 0.15);
+                            return;
+                        }
+                        modal.classList.add('hidden');
+                        this.startMultiStationRecipe(recipe);
+                    };
+
+                    grid.appendChild(card);
+                });
+
+                modal.classList.remove('hidden');
+            }
+
+            startMultiStationRecipe(recipe) {
+                this.activeCookingOrder = {
+                    recipe: recipe,
+                    currentStepIndex: 0
+                };
+
+                const firstStep = recipe.steps[0];
+                const stationId = STEP_STATIONS[firstStep] || 'mesa_gourmet';
+                const stationName = STATION_NAMES[stationId] || 'estación correspondiente';
+
+                this.showDialogue(
+                    "¡Pedido Iniciado!",
+                    `Has seleccionado: ${recipe.name}.\n\nPASO 1/4: Dirígete a [${stationName}] e interactúa.`
+                );
+                audio.playSuccess();
+            }
+
+            executeCurrentStepMinigame() {
+                if (!this.activeCookingOrder) return;
+
+                const { recipe, currentStepIndex } = this.activeCookingOrder;
+                const modal = document.getElementById('cookingModal');
+                const stage = document.getElementById('miniGameStage');
+                const title = document.getElementById('miniGameTitle');
+                const stepCount = document.getElementById('stepCounter');
+                const instruction = document.getElementById('miniGameInstruction');
+
+                title.innerText = `Preparando: ${recipe.name}`;
+                stepCount.innerText = `Paso ${currentStepIndex + 1}/${recipe.steps.length}`;
+                stage.innerHTML = '';
+                modal.classList.remove('hidden');
+
+                const stepType = recipe.steps[currentStepIndex];
+
+                const onStepComplete = () => {
+                    modal.classList.add('hidden');
+                    audio.playSuccess();
+
+                    this.activeCookingOrder.currentStepIndex++;
+
+                    if (this.activeCookingOrder.currentStepIndex >= recipe.steps.length) {
+                        recipe.prepared = true;
+                        this.activeCookingOrder = null;
+                        this.showDialogue(
+                            '¡Platillo Completado!',
+                            `¡Excelente! Has preparado con éxito el tradicional ${recipe.name}.`
+                        );
+                        this.updateUIStatus();
+                    } else {
+                        const nextIdx = this.activeCookingOrder.currentStepIndex;
+                        const nextStep = recipe.steps[nextIdx];
+                        const nextStationId = STEP_STATIONS[nextStep] || 'mesa_gourmet';
+                        const nextStationName = STATION_NAMES[nextStationId] || 'siguiente estación';
+
+                        this.showDialogue(
+                            `Paso ${nextIdx}/${recipe.steps.length} Completado`,
+                            `¡Bien hecho! Ahora dirígete a [${nextStationName}] para el Paso ${nextIdx + 1}/${recipe.steps.length}.`
+                        );
+                    }
+                };
+
+                if (stepType === 'dice_fish') {
+                    instruction.innerText = 'Paso 1/4 (Conservador): ¡Corta el pescado!';
+                    MinigameRenderer.renderChopMinigame(stage, onStepComplete);
+                } else if (stepType === 'squeeze_lime') {
+                    instruction.innerText = 'Paso 2/4 (Especias): ¡Exprime los limones!';
+                    MinigameRenderer.renderSqueezeLimeMinigame(stage, onStepComplete);
+                } else if (stepType === 'season_spices') {
+                    instruction.innerText = 'Paso 3/4 (Especias): ¡Sazona con ají limo y sal!';
+                    MinigameRenderer.renderSeasoningMinigame(stage, onStepComplete);
+                } else if (stepType === 'marinate_mix') {
+                    instruction.innerText = 'Paso 4/4 (Mesa Central): ¡Mezcla con cebolla morada!';
+                    MinigameRenderer.renderMixMinigame(stage, onStepComplete);
+
+                } else if (stepType === 'slice_meat') {
+                    instruction.innerText = 'Paso 1/4 (Conservador): ¡Corta la carne en tiras!';
+                    MinigameRenderer.renderChopMinigame(stage, onStepComplete);
+                } else if (stepType === 'wok_flambe') {
+                    instruction.innerText = 'Paso 2/4 (Fogón): ¡Saltea al wok!';
+                    MinigameRenderer.renderFlambeMinigame(stage, onStepComplete);
+                } else if (stepType === 'fry_potatoes') {
+                    instruction.innerText = 'Paso 3/4 (Fogón): ¡Fríe las papas!';
+                    MinigameRenderer.renderHeatMinigame(stage, onStepComplete);
+                } else if (stepType === 'combine_fries') {
+                    instruction.innerText = 'Paso 4/4 (Mesa Central): ¡Servir y emplatar!';
+                    MinigameRenderer.renderPlatingMinigame(stage, recipe, onStepComplete);
+
+                } else if (stepType === 'deseed_chili') {
+                    instruction.innerText = 'Paso 1/4 (Especias): ¡Limpia el ají amarillo!';
+                    MinigameRenderer.renderDeseedChiliMinigame(stage, onStepComplete);
+                } else if (stepType === 'blend_sauce') {
+                    instruction.innerText = 'Paso 2/4 (Especias): ¡Mezcla la salsa!';
+                    MinigameRenderer.renderBlendSauceMinigame(stage, onStepComplete);
+                } else if (stepType === 'boil_potatoes') {
+                    instruction.innerText = 'Paso 3/4 (Fogón): ¡Sancocha las papas!';
+                    MinigameRenderer.renderHeatMinigame(stage, onStepComplete);
+                } else if (stepType === 'drizzle_plate') {
+                    instruction.innerText = 'Paso 4/4 (Mesa Central): ¡Baña con la salsa!';
+                    MinigameRenderer.renderPlatingMinigame(stage, recipe, onStepComplete);
+
+                } else if (stepType === 'devein_rocoto') {
+                    instruction.innerText = 'Paso 1/4 (Especias): ¡Limpia el rocoto!';
+                    MinigameRenderer.renderDeseedChiliMinigame(stage, onStepComplete);
+                } else if (stepType === 'stuff_meat') {
+                    instruction.innerText = 'Paso 2/4 (Mesa Central): ¡Rellena con carne!';
+                    MinigameRenderer.renderMixMinigame(stage, onStepComplete);
+                } else if (stepType === 'bake_cheese') {
+                    instruction.innerText = 'Paso 4/4 (Fogón): ¡Gratina con queso!';
+                    MinigameRenderer.renderHeatMinigame(stage, onStepComplete);
+
+                } else if (stepType === 'skewer_meat') {
+                    instruction.innerText = 'Paso 1/4 (Conservador): ¡Ensarta en brochetas!';
+                    MinigameRenderer.renderSkewerMinigame(stage, onStepComplete);
+                } else if (stepType === 'brush_panca') {
+                    instruction.innerText = 'Paso 2/4 (Especias): ¡Pincela con ají panca!';
+                    MinigameRenderer.renderBrushPancaMinigame(stage, onStepComplete);
+                } else if (stepType === 'grill_fire') {
+                    instruction.innerText = 'Paso 3/4 (Fogón): ¡Asa a la parrilla!';
+                    MinigameRenderer.renderHeatMinigame(stage, onStepComplete);
+                } else if (stepType === 'plating_choclo') {
+                    instruction.innerText = 'Paso 4/4 (Mesa Central): ¡Sirve con choclo tierno!';
+                    MinigameRenderer.renderPlatingMinigame(stage, recipe, onStepComplete);
+
+                } else if (stepType === 'mash_potato') {
+                    instruction.innerText = 'Paso 1/4 (Mesa Central): ¡Prensa la papa!';
+                    MinigameRenderer.renderMashPotatoMinigame(stage, onStepComplete);
+                } else if (stepType === 'layer_cause') {
+                    instruction.innerText = 'Paso 3/4 (Mesa Central): ¡Arma las capas!';
+                    MinigameRenderer.renderLayerCausaMinigame(stage, onStepComplete);
+                } else if (stepType === 'garnish_egg') {
+                    instruction.innerText = 'Paso 4/4 (Mesa Central): ¡Decora y sirve!';
+                    MinigameRenderer.renderPlatingMinigame(stage, recipe, onStepComplete);
+
+                } else if (stepType === 'shred_chicken') {
+                    instruction.innerText = 'Paso 1/4 (Conservador): ¡Deshilacha la pechuga!';
+                    MinigameRenderer.renderShredChickenMinigame(stage, onStepComplete);
+                } else if (stepType === 'stir_cream') {
+                    instruction.innerText = 'Paso 3/4 (Fogón): ¡Remueve la crema!';
+                    MinigameRenderer.renderStirCreamMinigame(stage, onStepComplete);
+                } else if (stepType === 'add_olives') {
+                    instruction.innerText = 'Paso 4/4 (Mesa Central): ¡Emplata!';
+                    MinigameRenderer.renderPlatingMinigame(stage, recipe, onStepComplete);
+
+                } else if (stepType === 'shape_rings') {
+                    instruction.innerText = 'Paso 2/4 (Mesa Central): ¡Forma los aros!';
+                    MinigameRenderer.renderShapeRingsMinigame(stage, onStepComplete);
+                } else if (stepType === 'deep_fry') {
+                    instruction.innerText = 'Paso 3/4 (Fogón): ¡Fríe los picarones!';
+                    MinigameRenderer.renderHeatMinigame(stage, onStepComplete);
+                } else if (stepType === 'drizzle_syrup') {
+                    instruction.innerText = 'Paso 4/4 (Especias): ¡Baña con miel de chancaca!';
+                    MinigameRenderer.renderSyrupDrizzleMinigame(stage, onStepComplete);
+                } else {
+                    MinigameRenderer.renderMixMinigame(stage, onStepComplete);
+                }
+
+                document.getElementById('cancelCookBtn').onclick = () => {
+                    modal.classList.add('hidden');
+                };
+            }
+
+            loop() {
+                this.update();
+                this.render();
+                requestAnimationFrame(() => this.loop());
+            }
+        }
+
+        window.onload = () => {
+            const game = new GameEngine();
+            game.loop();
+
+            const soundBtn = document.getElementById('soundToggleBtn');
+            const soundIcon = document.getElementById('soundIcon');
+            soundBtn.onclick = () => {
+                audio.muted = !audio.muted;
+                if (audio.muted) {
+                    audio.stopBGM();
+                    soundIcon.className = 'fa-solid fa-volume-xmark text-stone-300';
+                    soundBtn.innerHTML = '<i id="soundIcon" class="fa-solid fa-volume-xmark text-stone-300"></i> Audio: OFF';
+                } else {
+                    audio.startBGM();
+                    soundIcon.className = 'fa-solid fa-volume-high text-amber-300';
+                    soundBtn.innerHTML = '<i id="soundIcon" class="fa-solid fa-volume-high text-amber-300"></i> Audio: ON';
+                }
+            };
+
+            const recipeModal = document.getElementById('recipeBookModal');
+            const recipeBtn = document.getElementById('recipeBookBtn');
+            const closeRecipeBtn = document.getElementById('closeRecipeBookBtn');
+            const recipeList = document.getElementById('recipeList');
+
+            recipeBtn.onclick = () => {
+                recipeList.innerHTML = '';
+                PERUVIAN_RECIPES.forEach(r => {
+                    const item = document.createElement('div');
+                    item.className = `p-4 rounded-2xl border ${r.prepared ? 'bg-gradient-to-r from-emerald-950/80 to-stone-900 border-emerald-600/50' : 'bg-gradient-to-r from-amber-950/60 to-stone-900 border-amber-600/30'}`;
+                    item.innerHTML = `
+                        <div class="flex justify-between items-center mb-1.5">
+                            <span class="font-bold text-amber-200 text-xs md:text-sm">${r.name}</span>
+                            <span class="text-[10px] px-2.5 py-1 rounded-full ${r.prepared ? 'bg-emerald-800 text-emerald-100 font-bold' : 'bg-stone-800 text-stone-400'}">
+                                ${r.prepared ? 'Preparado ✓' : 'Pendiente'}
+                            </span>
+                        </div>
+                        <p class="text-xs text-stone-300 mt-1">${r.desc}</p>
+                    `;
+                    recipeList.appendChild(item);
+                });
+                recipeModal.classList.remove('hidden');
+            };
+
+            closeRecipeBtn.onclick = () => {
+                recipeModal.classList.add('hidden');
+            };
+        };
+    </script>
+</body>
+</html>
